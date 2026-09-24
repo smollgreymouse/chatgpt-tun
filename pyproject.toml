@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chatgpt-tun"
+version = "0.1.0"
+description = "Detached multi-project MCP gateway exposed through one stable ngrok endpoint"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "smollgreymouse" }]
+dependencies = [
+  "mcp>=2.1,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-cov>=6.0",
+]
+
+[project.scripts]
+chatgpt-tun = "chatgpt_tun.cli:main"
+ctun = "chatgpt_tun.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chatgpt_tun"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
