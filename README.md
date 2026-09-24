@@ -45,7 +45,7 @@ The token never needs to be passed to `chatgpt-tun`.
 The intended global installation is with `pipx`:
 
 ```bash
-pipx install git+https://github.com/smollgreymouse/chatgpt-tun.git
+pipx install 'git+ssh://git@github.com/smollgreymouse/chatgpt-tun.git'
 ```
 
 This installs both command names:
