@@ -9,7 +9,7 @@ import sys
 import time
 from typing import Any
 
-from .state import clear_runtime, load_config, load_runtime, log_path
+from .state import clear_runtime, daemon_lifecycle_lock, load_config, load_runtime, log_path
 
 
 def pid_alive(pid: int | None) -> bool:
@@ -38,6 +38,11 @@ def _port_open(host: str, port: int) -> bool:
 
 
 def start_daemon(wait_seconds: float = 12.0) -> dict[str, Any]:
+    with daemon_lifecycle_lock():
+        return _start_daemon_unlocked(wait_seconds)
+
+
+def _start_daemon_unlocked(wait_seconds: float) -> dict[str, Any]:
     runtime = load_runtime()
     if pid_alive(runtime.get("daemon_pid")):
         return runtime
@@ -87,6 +92,11 @@ def ensure_daemon() -> dict[str, Any]:
 
 
 def stop_daemon(timeout: float = 5.0) -> bool:
+    with daemon_lifecycle_lock():
+        return _stop_daemon_unlocked(timeout)
+
+
+def _stop_daemon_unlocked(timeout: float) -> bool:
     runtime = load_runtime()
     pid = runtime.get("daemon_pid")
     if not pid_alive(pid):
