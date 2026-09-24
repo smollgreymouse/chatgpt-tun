@@ -82,6 +82,13 @@ def _file_lock(path: Path) -> Iterator[None]:
                 fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
+@contextlib.contextmanager
+def daemon_lifecycle_lock() -> Iterator[None]:
+    """Serialize daemon start/stop across independent ctun CLI processes."""
+    with _file_lock(state_dir() / "daemon-lifecycle"):
+        yield
+
+
 def _read_json_unlocked(path: Path, default: dict[str, Any]) -> dict[str, Any]:
     if not path.exists():
         return default
