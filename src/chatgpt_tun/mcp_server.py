@@ -4,6 +4,7 @@ from typing import Any
 
 from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
+from mcp.types import ToolAnnotations
 
 from .registry import list_projects as registry_list_projects
 from .state import endpoint_path, load_config
@@ -18,6 +19,31 @@ from .workspace import (
     write_text as workspace_write_text,
 )
 
+READ_ONLY = ToolAnnotations(
+    read_only_hint=True,
+    destructive_hint=False,
+    idempotent_hint=True,
+    open_world_hint=False,
+)
+WRITE_IDEMPOTENT = ToolAnnotations(
+    read_only_hint=False,
+    destructive_hint=True,
+    idempotent_hint=True,
+    open_world_hint=False,
+)
+WRITE_NON_IDEMPOTENT = ToolAnnotations(
+    read_only_hint=False,
+    destructive_hint=True,
+    idempotent_hint=False,
+    open_world_hint=False,
+)
+COMMAND = ToolAnnotations(
+    read_only_hint=False,
+    destructive_hint=True,
+    idempotent_hint=False,
+    open_world_hint=True,
+)
+
 
 def build_server() -> MCPServer:
     mcp = MCPServer(
@@ -28,7 +54,7 @@ def build_server() -> MCPServer:
         ),
     )
 
-    @mcp.tool()
+    @mcp.tool(annotations=READ_ONLY)
     def list_projects() -> list[dict[str, Any]]:
         """List projects that are currently enabled in the global chatgpt-tun registry."""
         return [
@@ -36,12 +62,12 @@ def build_server() -> MCPServer:
             for record in registry_list_projects(active_only=True)
         ]
 
-    @mcp.tool()
+    @mcp.tool(annotations=READ_ONLY)
     def list_directory(project: str, path: str = ".", include_hidden: bool = False) -> list[dict[str, Any]]:
         """List one directory inside an active project."""
         return workspace_list_directory(project, path, include_hidden)
 
-    @mcp.tool()
+    @mcp.tool(annotations=READ_ONLY)
     def read_text(
         project: str,
         path: str,
@@ -52,27 +78,27 @@ def build_server() -> MCPServer:
         """Read a UTF-8 text file from an active project, optionally by line range."""
         return workspace_read_text(project, path, start_line, end_line, max_chars)
 
-    @mcp.tool()
+    @mcp.tool(annotations=WRITE_IDEMPOTENT)
     def write_text(project: str, path: str, content: str, create_parents: bool = True) -> dict[str, Any]:
         """Create or replace a UTF-8 text file inside an active project."""
         return workspace_write_text(project, path, content, create_parents)
 
-    @mcp.tool()
+    @mcp.tool(annotations=WRITE_NON_IDEMPOTENT)
     def replace_text(project: str, path: str, old: str, new: str, count: int = 0) -> dict[str, Any]:
         """Replace exact text in a file. count=0 replaces every occurrence."""
         return workspace_replace_text(project, path, old, new, count)
 
-    @mcp.tool()
+    @mcp.tool(annotations=WRITE_IDEMPOTENT)
     def make_directory(project: str, path: str, parents: bool = True) -> dict[str, Any]:
         """Create a directory inside an active project."""
         return workspace_make_directory(project, path, parents)
 
-    @mcp.tool()
+    @mcp.tool(annotations=WRITE_NON_IDEMPOTENT)
     def remove_path(project: str, path: str, recursive: bool = False) -> dict[str, Any]:
         """Remove a file or directory inside an active project. The project root itself cannot be removed."""
         return workspace_remove_path(project, path, recursive)
 
-    @mcp.tool()
+    @mcp.tool(annotations=READ_ONLY)
     def search_text(
         project: str,
         query: str,
@@ -83,7 +109,7 @@ def build_server() -> MCPServer:
         """Search literal text recursively under an active project."""
         return workspace_search_text(project, query, path, glob, max_results)
 
-    @mcp.tool()
+    @mcp.tool(annotations=COMMAND)
     def run_command(
         project: str,
         argv: list[str],
