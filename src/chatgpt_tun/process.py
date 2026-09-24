@@ -7,7 +7,6 @@ import socket
 import subprocess
 import sys
 import time
-from pathlib import Path
 from typing import Any
 
 from .state import clear_runtime, load_config, load_runtime, log_path
@@ -66,7 +65,7 @@ def start_daemon(wait_seconds: float = 12.0) -> dict[str, Any]:
     deadline = time.monotonic() + wait_seconds
     while time.monotonic() < deadline:
         runtime = load_runtime()
-        if _port_open(str(config["host"]), int(config["port"])):
+        if runtime.get("daemon_pid") == process.pid and _port_open(str(config["host"]), int(config["port"])):
             return runtime
         if not pid_alive(process.pid):
             break
@@ -124,9 +123,9 @@ def wait_for_connector_url(timeout: float = 20.0) -> str | None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         runtime = load_runtime()
-        if runtime.get("connector_url"):
+        if runtime.get("ngrok_ready") and runtime.get("connector_url"):
             return str(runtime["connector_url"])
-        if runtime.get("ngrok_error"):
+        if runtime.get("ngrok_error") or runtime.get("error"):
             return None
         time.sleep(0.25)
     return None
