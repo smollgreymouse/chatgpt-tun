@@ -212,7 +212,11 @@ Current tools:
 - `make_directory`
 - `remove_path`
 - `search_text`
-- `run_command`
+- `run_command` (short, synchronous operations)
+- `start_command` (non-blocking long operations, returns `job_id`)
+- `get_command_status`
+- `read_command_output` (bounded stdout/stderr chunks with byte offsets)
+- `cancel_command`
 
 Every workspace tool requires a `project` argument. File operations resolve paths against that project's root and reject `..`, absolute paths, and symlink traversal outside the root.
 
@@ -245,3 +249,32 @@ pytest
 ```
 
 The implementation uses the current MCP Python SDK v2 and Streamable HTTP.
+
+## Long-running commands without HTTP timeouts
+
+Use `start_command` instead of `run_command` for builds, tests and other long
+operations. It returns a `job_id` immediately; the command runs in the gateway,
+independently of the ChatGPT HTTP request. Poll `get_command_status` and call
+`read_command_output` separately for stdout and stderr, passing the returned
+`next_offset` for subsequent calls. Poll at a reasonable interval (e.g. 5–15
+seconds), not continuously. Use `cancel_command` to request cancellation.
+
+Provide a stable `request_id` when network retries are possible. Within a project
+the same request ID and arguments return the same job rather than executing twice.
+A reused request ID with different arguments raises an error.
+
+Jobs and log files reside in `~/.local/state/chatgpt-tun/jobs/` (or the
+configured `CHATGPT_TUN_HOME`). Up to four commands execute concurrently. Each
+output stream is capped at 8 MiB, with truncation flagged explicitly; further
+output is drained and discarded to avoid child-process deadlock. The last 100
+jobs are retained, removing oldest completed jobs as needed.
+
+Metadata and completed output survive daemon restart. Commands still running
+during an unexpected gateway restart are marked `interrupted`; this does not
+promise that arbitrary descendant processes were killed after an OS crash.
+On graceful gateway shutdown managed process groups are terminated. Commands
+should be designed to be retry-safe when recovering from unexpected crashes.
+
+The legacy `run_command` is unchanged. Streamable HTTP still uses stateless
+JSON responses; asynchronous jobs avoid holding an HTTP call open and do not
+require SSE/notification support in ChatGPT.
