@@ -7,6 +7,7 @@ import threading
 from datetime import datetime, timezone
 from typing import Any
 
+from .jobs import get_manager
 from .mcp_server import run_server
 from .ngrok import NgrokError, discover_public_url, start_ngrok
 from .state import (
@@ -92,6 +93,7 @@ def main() -> int:
     )
 
     def cleanup() -> None:
+        get_manager().shutdown()
         _terminate(ngrok_process)
         clear_runtime(expected_pid=pid)
 
@@ -126,6 +128,7 @@ def main() -> int:
         print(f"MCP server failed: {exc!r}", flush=True)
         return 1
     finally:
+        get_manager().shutdown()
         _terminate(ngrok_process)
         clear_runtime(expected_pid=pid)
 
