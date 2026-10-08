@@ -6,6 +6,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 
+from .jobs import get_manager
 from .registry import list_projects as registry_list_projects
 from .state import endpoint_path, load_config
 from .workspace import (
@@ -119,6 +120,32 @@ def build_server() -> MCPServer:
     ) -> dict[str, Any]:
         """Run a command without a shell inside an active project. argv is an argument vector."""
         return workspace_run_command(project, argv, cwd, timeout, max_output)
+
+    @mcp.tool(annotations=COMMAND)
+    def start_command(
+        project: str, argv: list[str], cwd: str = ".", timeout: int = 3600,
+        request_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Start a durable background process; return a job_id immediately. Use for long commands."""
+        return get_manager().start(project, argv, cwd, timeout, request_id)
+
+    @mcp.tool(annotations=READ_ONLY)
+    def get_command_status(project: str, job_id: str) -> dict[str, Any]:
+        """Check an asynchronous command by job_id without waiting for completion."""
+        return get_manager().status(project, job_id)
+
+    @mcp.tool(annotations=READ_ONLY)
+    def read_command_output(
+        project: str, job_id: str, stream: str = "stdout",
+        offset: int = 0, max_bytes: int = 65536,
+    ) -> dict[str, Any]:
+        """Read a bounded log chunk using byte offsets. Pass next_offset on subsequent calls."""
+        return get_manager().output(project, job_id, stream, offset, max_bytes)
+
+    @mcp.tool(annotations=COMMAND)
+    def cancel_command(project: str, job_id: str) -> dict[str, Any]:
+        """Request termination of a running background command and its process group."""
+        return get_manager().cancel(project, job_id)
 
     return mcp
 
