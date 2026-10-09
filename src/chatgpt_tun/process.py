@@ -2,26 +2,14 @@ from __future__ import annotations
 
 import contextlib
 import os
-import signal
 import socket
 import subprocess
 import sys
 import time
 from typing import Any
 
+from .platforms import pid_alive, spawn_flags, stop_pid
 from .state import clear_runtime, daemon_lifecycle_lock, load_config, load_runtime, log_path
-
-
-def pid_alive(pid: int | None) -> bool:
-    if not pid or pid <= 0:
-        return False
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    return True
 
 
 def daemon_running() -> bool:
@@ -57,10 +45,7 @@ def _start_daemon_unlocked(wait_seconds: float) -> dict[str, Any]:
             "stderr": subprocess.STDOUT,
             "close_fds": True,
         }
-        if os.name == "nt":
-            kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
-        else:
-            kwargs["start_new_session"] = True
+        kwargs.update(spawn_flags())
         process = subprocess.Popen(
             [sys.executable, "-m", "chatgpt_tun.daemon"],
             **kwargs,
@@ -105,10 +90,7 @@ def _stop_daemon_unlocked(timeout: float) -> bool:
 
     assert isinstance(pid, int)
     try:
-        if os.name == "nt":
-            os.kill(pid, signal.SIGTERM)
-        else:
-            os.killpg(pid, signal.SIGTERM)
+        stop_pid(pid)
     except ProcessLookupError:
         clear_runtime()
         return False
@@ -121,10 +103,7 @@ def _stop_daemon_unlocked(timeout: float) -> bool:
         time.sleep(0.1)
 
     with contextlib.suppress(ProcessLookupError):
-        if os.name == "nt":
-            os.kill(pid, signal.SIGKILL)
-        else:
-            os.killpg(pid, signal.SIGKILL)
+        stop_pid(pid, force=True)
     clear_runtime(expected_pid=pid)
     return True
 
