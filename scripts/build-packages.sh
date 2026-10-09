@@ -20,7 +20,7 @@ cat > "$ROOT/usr/bin/ctun" <<'EOF'
 #!/bin/sh
 set -eu
 export PYTHONPATH="/opt/chatgpt-tun/site${PYTHONPATH:+:${PYTHONPATH}}"
-exec python3 -m chatgpt_tun "$@"
+exec python3.12 -m chatgpt_tun "$@"
 EOF
 chmod 755 "$ROOT/usr/bin/ctun"
 ln -s ctun "$ROOT/usr/bin/chatgpt-tun"
@@ -38,7 +38,7 @@ Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: smollgreymouse
-Depends: python3 (>= 3.11)
+Depends: python3.12
 Description: Detached multi-project MCP gateway over ngrok
 EOF
 dpkg-deb --build --root-owner-group "$DEBROOT" "$DIST/chatgpt-tun_${VERSION}_amd64.deb"
@@ -51,7 +51,7 @@ Release: 1
 Summary: Detached multi-project MCP gateway over ngrok
 License: MIT
 BuildArch: x86_64
-Requires: python3 >= 3.11
+Requires: python3.12
 %global debug_package %{nil}
 %description
 Detached multi-project MCP gateway for ChatGPT.
