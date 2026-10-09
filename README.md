@@ -25,41 +25,129 @@ chatgpt-tun daemon on 127.0.0.1:8765
 
 There is no tunnel per project. `ctun up` only changes the global project registry. The detached daemon and ngrok endpoint stay the same, so the ChatGPT connector URL does not change.
 
-## Requirements
+## Install CTUN (v0.2.0)
 
-- Linux/macOS/Windows
-- Python 3.11+
-- an ngrok account and the ngrok agent
-- ngrok authenticated once with its normal local config
+Choose **one installation method**. Python libraries are included in binary packages;
+ngrok requires a separate account and one-time authorization.
+[Latest releases](https://github.com/smollgreymouse/chatgpt-tun/releases).
 
-Install ngrok using the official instructions, then add your token **locally**:
+### Ubuntu / Debian — APT + DEB
 
-```bash
-ngrok config add-authtoken '<YOUR_TOKEN>'
-```
-
-The token never needs to be passed to `chatgpt-tun`.
-
-## Install
-
-The intended global installation is with `pipx`:
+The DEB includes Python dependencies but requires `python3.12` and `ngrok`
+through APT. Ensure Python 3.12 is available in your distro's configured
+repositories; if not, add a trusted Python 3.12 source or use pipx.
 
 ```bash
-pipx install 'git+ssh://git@github.com/smollgreymouse/chatgpt-tun.git'
+git clone https://github.com/smollgreymouse/chatgpt-tun.git
+cd chatgpt-tun
+# Adds official signed ngrok APT source. Once per machine:
+sudo bash scripts/setup-ngrok-apt.sh
+# Download the appropriate .deb from GitHub Releases, then:
+sudo apt install ./chatgpt-tun_0.2.0_amd64.deb
+ngrok config add-authtoken 'YOUR_NGROK_TOKEN'
+ctun doctor
+ctun setup
 ```
 
-This installs both command names:
+The repository-setup script changes APT configuration, but never reads or changes
+ngrok credentials. `apt install` installs declared dependencies; it does not
+automatically add third-party repositories.
+
+### Fedora / RPM-based Linux
+
+Requires `python3.12` and ngrok installed separately. The RPM only
+**recommends** ngrok because an official compatible RPM repository has not been
+verified. Download the RPM from Releases, then:
 
 ```bash
-ctun
-chatgpt-tun
+sudo dnf install python3.12
+sudo dnf install ./chatgpt-tun-0.2.0-1.x86_64.rpm
+# Install ngrok from https://ngrok.com/download/linux and put it on PATH
+ngrok version
+ngrok config add-authtoken 'YOUR_NGROK_TOKEN'
+ctun doctor
+ctun setup
 ```
 
-Upgrade later with:
+### Linux tarball
+
+Download `chatgpt-tun_0.2.0_linux_amd64.tar.gz` from Releases.
+Requires CPython 3.12 and separately installed ngrok. The tarball uses fixed
+paths under `/opt/chatgpt-tun` and `/usr/bin`:
 
 ```bash
-pipx upgrade chatgpt-tun
+sudo tar -C / -xzf chatgpt-tun_0.2.0_linux_amd64.tar.gz
+ctun --version
 ```
+
+### macOS Apple Silicon — Homebrew (recommended)
+
+Homebrew cask installs Python 3.12, ngrok and the CTUN PKG through a custom tap:
+
+```sh
+brew tap smollgreymouse/chatgpt-tun https://github.com/smollgreymouse/chatgpt-tun
+brew install --cask smollgreymouse/chatgpt-tun/chatgpt-tun
+ngrok config add-authtoken 'YOUR_NGROK_TOKEN'
+ctun doctor
+ctun setup
+```
+
+Alternative: download and install `chatgpt-tun_0.2.0_macos_arm64.pkg`
+manually, after installing Python 3.12 and ngrok. The package is currently
+unsigned/not notarized; macOS may require an explicit trust decision.
+macOS Intel is not packaged in this release.
+
+### Windows x64 — graphical installer (recommended)
+
+1. Download `chatgpt-tun_0.2.0_windows_amd64.exe` from Releases and run it.
+   It installs per-user, bundles Python and its libraries, and does not need admin rights.
+2. Install ngrok: in PowerShell run `winget install Ngrok.Ngrok`.
+3. Open a new PowerShell, then run:
+
+```powershell
+ngrok config add-authtoken YOUR_NGROK_TOKEN
+& "$env:LOCALAPPDATA\Programs\CTUN\ctun.exe" doctor
+& "$env:LOCALAPPDATA\Programs\CTUN\ctun.exe" setup
+```
+
+The installer does not silently change PATH. You can add
+`%LOCALAPPDATA%\Programs\CTUN` to the **user** PATH if you want `ctun`
+everywhere. The older portable ZIP remains available but requires Python 3.12
+and does not register an application in Windows.
+
+### Any OS — pipx from our GitHub repository
+
+Keep this option for development and for hosts where a native package is unsuitable.
+Install Python 3.11+ and pipx through your platform package manager first,
+and install ngrok independently.
+
+```bash
+pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git@v0.2.0'
+# Alternatively track main:
+# pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git'
+ctun --version
+ctun doctor
+```
+
+On Windows, use PowerShell without shell-specific single-quote assumptions.
+An SSH-based URL also works when GitHub SSH access is configured.
+
+### Updating or switching installation methods
+
+```bash
+ctun shutdown         # stop the existing daemon before replacing code
+# Native packages: reinstall a newer package from Releases;
+# Homebrew: brew upgrade --cask smollgreymouse/chatgpt-tun/chatgpt-tun
+# pipx: pipx upgrade chatgpt-tun
+ctun --version
+ctun doctor
+ctun up /path/to/your/project
+```
+
+Do not leave an old `pipx` `ctun` shadowing a new system package on PATH:
+check with `command -v ctun` (macOS/Linux) or `Get-Command ctun`
+(Windows). User state and the secret connector URL are preserved in the
+per-user state directory, and packages do not rewrite ngrok credentials.
 
 ## One-time setup
 
@@ -280,178 +368,22 @@ JSON responses; asynchronous jobs avoid holding an HTTP call open and do not
 require SSE/notification support in ChatGPT.
 
 
-## Versioned Linux packages and releases
+## Packaging and release engineering
 
-Package version is the single `[project].version` value in `pyproject.toml`.
-Releases follow SemVer tags such as `v0.1.0`; the tag must match that value.
-The Release GitHub Actions workflow runs tests, builds three Linux x86-64
-artifacts, smoke-tests the Debian package and publishes them to GitHub Releases.
-A manual workflow dispatch builds artifacts without publishing a release.
+The canonical version comes from `pyproject.toml`. Tags `vX.Y.Z` trigger
+independent Linux and macOS/Windows workflows. CI tests on each OS before
+publishing. The Linux `.deb`, `.rpm` and `.tar.gz` are built on Linux;
+macOS `.pkg` on macOS; Windows portable `.zip` and native `.exe` on Windows.
 
-Release assets:
-- `chatgpt-tun_VERSION_amd64.deb` for Debian/Ubuntu
-- `chatgpt-tun-VERSION-1.x86_64.rpm` for RPM-based Linux
-- `chatgpt-tun_VERSION_linux_amd64.tar.gz` for manual installation
-- `SHA256SUMS` for integrity checks
+Packages currently target Linux x86-64 (CPython 3.12), macOS arm64
+(CPython 3.12), and Windows x64 (bundled Python for the EXE).
+`ctun doctor` is read-only: it diagnoses dependencies and reported
+tunnel readiness without starting a tunnel or modifying credentials.
+A configured public URL alone is **not proof** of ngrok authorization.
 
-**Runtime requirement:** these initial Linux packages vendor Python dependencies
-built for **CPython 3.12** on Linux x86-64. Install `python3.12` on the target
-system; Python 3.11/3.13/3.14 cannot use the bundled native-extension wheels.
-The RPM and Debian package metadata declare this dependency. The tarball requires
-Python 3.12 and must be extracted at the filesystem root because its launchers
-refer to `/opt/chatgpt-tun/site`. This is not yet a universal Linux bundle.
-
-Install Debian/Ubuntu (one-time ngrok APT repository configuration first):
-
-```bash
-# From the checked-out CTUN repository:
-sudo bash scripts/setup-ngrok-apt.sh
-# The .deb then pulls ngrok and python3.12 through APT:
-sudo apt install ./chatgpt-tun_0.1.0_amd64.deb
-```
-
-The official ngrok APT repository is at
-`https://ngrok-agent.s3.amazonaws.com`, using the vendor-provided
-`ngrok.asc` key restricted to that repository via `signed-by`. The
-vendor currently documents the `bookworm` distribution for Linux
-APT installation. APT cannot discover third-party repositories merely
-from a `Depends: ngrok` field, so repository registration is an
-**explicit one-time operation**, not an implicit package post-install
-side effect. The CTUN package itself never sets an ngrok auth token,
-changes an existing ngrok config or launches the tunnel.
-
-The initial DEB uses `Depends: python3.12, ngrok`. No pip operation runs
-on the user's machine when installing it: Python libraries are vendored
-into `/opt/chatgpt-tun/site`.
-
-Install on an RPM-based Linux with Python 3.12 and ngrok already available:
-
-The RPM declares `Requires: python3.12` and `Recommends: ngrok`,
-because a generally available official ngrok RPM repository has **not**
-been verified. First install the ngrok standalone executable from
-[the official download page](https://ngrok.com/download/linux), then
-verify `ngrok version`. An RPM-installed ngrok package, when present,
-may satisfy the recommendation; placing a manually downloaded binary
-in PATH does **not** fulfill an RPM hard dependency.
-
-
-
-```bash
-sudo dnf install ./chatgpt-tun-0.1.0-1.x86_64.rpm
-```
-
-Install the tarball manually (does not register with a package manager):
-
-```bash
-sudo tar -C / -xzf chatgpt-tun_0.1.0_linux_amd64.tar.gz
-```
-
-Check `ctun --version`, `ngrok version`, and `ctun --help` after installation. `ngrok` is still a separately
-installed prerequisite. Existing connector URLs, active projects and gateway
-configuration remain under `~/.local/state/chatgpt-tun/` and are not deleted
-during package upgrades. Prefer `ctun shutdown` before replacing a running
-CTUN installation and `ctun up` afterward; binaries are not hot-reloaded.
-
-To publish a new version:
-1. Bump `pyproject.toml` version and update notes as needed.
-2. Merge and check CI on `main`.
-3. Push the matching annotated Git tag `vX.Y.Z` from that commit.
-4. Confirm the `Release packages` workflow passed and assets appeared under Releases.
-
-Local Linux builds need Python 3.12, `pip`, `dpkg-deb` and `rpmbuild`:
-`bash scripts/build-packages.sh`.
-
-## pipx remains supported on every OS
-
-Installing directly from this GitHub repository is a supported alternative to the
-binary release artifacts, and remains the simplest choice for developers:
-
-```bash
-pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git'
-pipx upgrade chatgpt-tun
-```
-
-Pin an exact, reproducible release with
-`pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git@v0.1.0'`
-(after the tag has been published). The existing SSH-based pipx instructions
-above also continue to work.
-
-## macOS and Windows distributions (separate platform pipeline)
-
-The macOS/Windows workflow is isolated from the Linux packaging workflow.
-It executes the test suite on each target OS and builds:
-- macOS (Apple Silicon) `.pkg` placing CTUN into `/opt/chatgpt-tun`
-  and launchers into `/usr/local/bin`. Python 3.12 and ngrok are external prerequisites.
-- Windows x64 portable `.zip` with `ctun.cmd`, bundled dependencies,
-  and `install.ps1` for copying files under the current user's
-  `%LOCALAPPDATA%\\Programs\\chatgpt-tun`. Python 3.12 and ngrok
-  are external prerequisites. This is **not yet an MSI**; add the extracted
-  directory to PATH after installing.
-
-The code uses `chatgpt_tun.platforms.linux`,
-`chatgpt_tun.platforms.macos`, and `chatgpt_tun.platforms.windows`
-for native process lifecycle operations. Shared MCP tools, jobs,
-configuration and project registry do not depend on a particular OS.
-Windows-specific integration needs validation in its own CI job before
-considering it production-supported. The Linux workflow remains independent.
-
-All packages preserve user state. The CTUN daemon should be shut down before
-upgrading; installing a new package never automatically restarts a running
-gateway.
-
-For `pipx`, dependency installation is deliberately different:
-`pipx` resolves CTUN's Python dependencies in its own isolated
-environment, but does **not** install the external ngrok executable.
-Install ngrok separately using its official instructions. Never place
-authtokens in system package scripts.
-
-## v0.2.0 native installers and dependencies
-
-All installation paths remain available, including
-`pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git'`
-and tagged `pipx` installs. Linux DEB/RPM/tar packaging is unchanged except
-for the shared application version.
-
-### macOS Apple Silicon, Homebrew
-
-This repository contains a Homebrew cask under `Casks/chatgpt-tun.rb`. Tap
-this repository as a custom tap before installing:
-
-```sh
-brew tap smollgreymouse/chatgpt-tun https://github.com/smollgreymouse/chatgpt-tun
-brew install --cask smollgreymouse/chatgpt-tun/chatgpt-tun
-ctun doctor
-```
-
-The cask declares dependencies on Homebrew `python@3.12` and the official
-`ngrok` cask. The `.pkg` remains available for manual installation.
-Do not replace or delete the existing ngrok authentication; run
-`ngrok config add-authtoken ...` only on fresh machines.
-
-### Windows x64, native installer
-
-The release adds `chatgpt-tun_VERSION_windows_amd64.exe`, generated
-by Inno Setup from a PyInstaller bundle. This includes its own CPython
-runtime and Python package dependencies (no standalone Python needed).
-It installs for the current user without administrator permissions
-and does not run CTUN as a service or change ngrok credentials.
-Install ngrok separately with `winget install Ngrok.Ngrok`, authenticate
-once and run CTUN doctor from the Start Menu. Add the application's
-installation directory to PATH if you want bare `ctun` at a terminal;
-the installer does not silently rewrite the user's PATH.
-
-The existing Windows portable archive is retained as an alternative; it
-still needs Python 3.12. Windows, macOS and Linux have independent CI
-build jobs and dedicated process modules; no platform installer runs
-on another operating system.
-
-### Troubleshooting
-
-```sh
-ctun --version
-ctun doctor
-ctun doctor --json
-```
-
-Doctor reports missing dependencies and tunnel readiness without modifying
-ngrok credentials, registered projects, or starting/stopping the daemon.
+Build locally with `bash scripts/build-packages.sh` (Linux),
+`bash scripts/build-macos.sh` (macOS), or
+`./scripts/build-windows.ps1` (Windows portable archive).
+Windows native EXE is built separately in GitHub Actions using
+PyInstaller and Inno Setup. Check the matching workflow status and
+uploaded assets before tagging any new release.
