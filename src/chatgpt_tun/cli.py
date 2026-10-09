@@ -302,6 +302,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if (argv if argv is not None else sys.argv[1:]) == ["--internal-daemon"]:
+        from .daemon import main as daemon_main
+        return daemon_main()
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
