@@ -56,7 +56,8 @@ jobs:
         run: |
           choco install innosetup --yes --no-progress
           $version = python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])"
-          & "C:/Program Files (x86)/Inno Setup 6/ISCC.exe" "/DAppVersion=$version" packaging/windows/ctun.iss
+          $sourceDir = (Resolve-Path "build/windows-dist/ctun").Path
+          & "C:/Program Files (x86)/Inno Setup 6/ISCC.exe" "/DAppVersion=$version" "/DSourceDir=$sourceDir" packaging/windows/ctun.iss
       - name: Validate tag version
         if: github.ref_type == 'tag'
         shell: bash
