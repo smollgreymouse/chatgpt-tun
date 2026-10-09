@@ -49,6 +49,7 @@ jobs:
           & ./build/windows-dist/ctun/ctun.exe --version
           & ./build/windows-dist/ctun/ctun.exe doctor --json
           if ($LASTEXITCODE -ne 2 -and $LASTEXITCODE -ne 0) { exit 1 }
+          exit 0
       - name: Package Windows installer
         if: matrix.kind == 'windows'
         shell: pwsh
