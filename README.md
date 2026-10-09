@@ -333,3 +333,41 @@ To publish a new version:
 
 Local Linux builds need Python 3.12, `pip`, `dpkg-deb` and `rpmbuild`:
 `bash scripts/build-packages.sh`.
+
+## pipx remains supported on every OS
+
+Installing directly from this GitHub repository is a supported alternative to the
+binary release artifacts, and remains the simplest choice for developers:
+
+```bash
+pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git'
+pipx upgrade chatgpt-tun
+```
+
+Pin an exact, reproducible release with
+`pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git@v0.1.0'`
+(after the tag has been published). The existing SSH-based pipx instructions
+above also continue to work.
+
+## macOS and Windows distributions (separate platform pipeline)
+
+The macOS/Windows workflow is isolated from the Linux packaging workflow.
+It executes the test suite on each target OS and builds:
+- macOS (Apple Silicon) `.pkg` placing CTUN into `/opt/chatgpt-tun`
+  and launchers into `/usr/local/bin`. Python 3.12 and ngrok are external prerequisites.
+- Windows x64 portable `.zip` with `ctun.cmd`, bundled dependencies,
+  and `install.ps1` for copying files under the current user's
+  `%LOCALAPPDATA%\\Programs\\chatgpt-tun`. Python 3.12 and ngrok
+  are external prerequisites. This is **not yet an MSI**; add the extracted
+  directory to PATH after installing.
+
+The code uses `chatgpt_tun.platforms.linux`,
+`chatgpt_tun.platforms.macos`, and `chatgpt_tun.platforms.windows`
+for native process lifecycle operations. Shared MCP tools, jobs,
+configuration and project registry do not depend on a particular OS.
+Windows-specific integration needs validation in its own CI job before
+considering it production-supported. The Linux workflow remains independent.
+
+All packages preserve user state. The CTUN daemon should be shut down before
+upgrading; installing a new package never automatically restarts a running
+gateway.
