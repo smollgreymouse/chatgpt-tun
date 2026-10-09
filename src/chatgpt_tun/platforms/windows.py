@@ -31,3 +31,21 @@ def stop_pid(pid: int, force: bool = False) -> None:
     # taskkill /T terminates the complete process tree.
     subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], check=False,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+from contextlib import contextmanager
+
+@contextmanager
+def advisory_lock(fh):
+    """Lock byte zero, and always unlock the very same byte."""
+    import msvcrt
+    fh.seek(0, 2)
+    if fh.tell() == 0:
+        fh.write(b"0")
+        fh.flush()
+    fh.seek(0)
+    msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
+    try:
+        yield
+    finally:
+        fh.seek(0)
+        msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
