@@ -45,7 +45,7 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install pyinstaller
-          python -m PyInstaller --clean --noconfirm --onedir --name ctun --collect-all mcp --distpath build/windows-dist packaging/windows/entry.py
+          python -m PyInstaller --clean --noconfirm --onedir --name ctun --distpath build/windows-dist packaging/windows/entry.py
           & ./build/windows-dist/ctun/ctun.exe --version
           & ./build/windows-dist/ctun/ctun.exe doctor --json
           if ($LASTEXITCODE -ne 2 -and $LASTEXITCODE -ne 0) { exit 1 }
