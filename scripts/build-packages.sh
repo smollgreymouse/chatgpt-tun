@@ -23,7 +23,6 @@ export PYTHONPATH="/opt/ctun/site${PYTHONPATH:+:${PYTHONPATH}}"
 exec python3.12 -m chatgpt_tun "$@"
 EOF
 chmod 755 "$ROOT/usr/bin/ctun"
-ln -s ctun "$ROOT/usr/bin/ctun"
 
 # A tarball preserves the same system layout as the distro packages.
 tar -C "$ROOT" -czf "$DIST/ctun_${VERSION}_linux_amd64.tar.gz" .

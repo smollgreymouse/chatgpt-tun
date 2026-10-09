@@ -35,7 +35,10 @@ jobs:
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
       - name: Build distribution packages
-        run: bash scripts/build-packages.sh
+        run: |
+          bash scripts/build-packages.sh
+          test -x build/root/usr/bin/ctun
+          test ! -L build/root/usr/bin/ctun
       - name: Configure official ngrok APT repository
         run: sudo bash scripts/setup-ngrok-apt.sh
       - name: Smoke test Debian installation with dependencies

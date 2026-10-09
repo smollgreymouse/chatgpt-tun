@@ -12,5 +12,4 @@ export PYTHONPATH="/opt/ctun/site${PYTHONPATH:+:${PYTHONPATH}}"
 exec python3.12 -m chatgpt_tun "$@"
 EOF
 chmod 755 "$ROOT/usr/local/bin/ctun"
-ln -sf ctun "$ROOT/usr/local/bin/ctun"
 pkgbuild --root "$ROOT" --identifier "dev.smollgreymouse.ctun" --version "$VERSION" --install-location / "dist/ctun_${VERSION}_macos_${ARCH}.pkg"

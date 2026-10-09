@@ -1,5 +1,5 @@
 cask "ctun" do
-  version "0.3.0"
+  version "0.3.1"
   sha256 :no_check
 
   url "https://github.com/smollgreymouse/ctun/releases/download/v#{version}/ctun_#{version}_macos_arm64.pkg"

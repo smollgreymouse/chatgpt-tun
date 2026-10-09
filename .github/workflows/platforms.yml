@@ -35,7 +35,10 @@ jobs:
       - name: Build macOS package
         if: matrix.kind == 'macos'
         shell: bash
-        run: bash scripts/build-macos.sh
+        run: |
+          bash scripts/build-macos.sh
+          test -x build/macos-root/usr/local/bin/ctun
+          test ! -L build/macos-root/usr/local/bin/ctun
       - name: Build Windows archive
         if: matrix.kind == 'windows'
         shell: pwsh

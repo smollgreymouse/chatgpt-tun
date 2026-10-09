@@ -33,7 +33,7 @@ ctun daemon on 127.0.0.1:8765
 
 There is no tunnel per project. `ctun up` only changes the global project registry. The detached daemon and ngrok endpoint stay the same, so the ChatGPT connector URL does not change.
 
-## Install CTUN (v0.3.0)
+## Install CTUN (v0.3.1)
 
 Choose **one installation method**. Python libraries are included in binary packages;
 ngrok requires a separate account and one-time authorization.
@@ -51,7 +51,7 @@ cd ctun
 # Adds official signed ngrok APT source. Once per machine:
 sudo bash scripts/setup-ngrok-apt.sh
 # Download the appropriate .deb from GitHub Releases, then:
-sudo apt install ./ctun_0.3.0_amd64.deb
+sudo apt install ./ctun_0.3.1_amd64.deb
 ngrok config add-authtoken 'YOUR_NGROK_TOKEN'
 ctun doctor
 ctun setup
@@ -69,7 +69,7 @@ verified. Download the RPM from Releases, then:
 
 ```bash
 sudo dnf install python3.12
-sudo dnf install ./ctun-0.3.0-1.x86_64.rpm
+sudo dnf install ./ctun-0.3.1-1.x86_64.rpm
 # Install ngrok from https://ngrok.com/download/linux and put it on PATH
 ngrok version
 ngrok config add-authtoken 'YOUR_NGROK_TOKEN'
@@ -79,12 +79,12 @@ ctun setup
 
 ### Linux tarball
 
-Download `ctun_0.3.0_linux_amd64.tar.gz` from Releases.
+Download `ctun_0.3.1_linux_amd64.tar.gz` from Releases.
 Requires CPython 3.12 and separately installed ngrok. The tarball uses fixed
 paths under `/opt/ctun` and `/usr/bin`:
 
 ```bash
-sudo tar -C / -xzf ctun_0.3.0_linux_amd64.tar.gz
+sudo tar -C / -xzf ctun_0.3.1_linux_amd64.tar.gz
 ctun --version
 ```
 
@@ -100,14 +100,14 @@ ctun doctor
 ctun setup
 ```
 
-Alternative: download and install `ctun_0.3.0_macos_arm64.pkg`
+Alternative: download and install `ctun_0.3.1_macos_arm64.pkg`
 manually, after installing Python 3.12 and ngrok. The package is currently
 unsigned/not notarized; macOS may require an explicit trust decision.
 macOS Intel is not packaged in this release.
 
 ### Windows x64 — graphical installer (recommended)
 
-1. Download `ctun_0.3.0_windows_amd64.exe` from Releases and run it.
+1. Download `ctun_0.3.1_windows_amd64.exe` from Releases and run it.
    It installs per-user, bundles Python and its libraries, and does not need admin rights.
 2. Install ngrok: in PowerShell run `winget install Ngrok.Ngrok`.
 3. Open a new PowerShell, then run:
@@ -130,7 +130,7 @@ Install Python 3.11+ and pipx through your platform package manager first,
 and install ngrok independently.
 
 ```bash
-pipx install 'git+https://github.com/smollgreymouse/ctun.git@v0.3.0'
+pipx install 'git+https://github.com/smollgreymouse/ctun.git@v0.3.1'
 # Alternatively track main:
 # pipx install 'git+https://github.com/smollgreymouse/ctun.git'
 ctun --version
