@@ -10,7 +10,6 @@ python -m pip install --no-compile --target "$stage/site" .
 set "PYTHONPATH=%~dp0site;%PYTHONPATH%"
 py -3.12 -m chatgpt_tun %*
 '@ | Set-Content "$stage/ctun.cmd" -Encoding ascii
-Copy-Item "$stage/ctun.cmd" "$stage/ctun.cmd"
 @'
 $ErrorActionPreference = "Stop"
 $source = Split-Path -Parent $MyInvocation.MyCommand.Path
