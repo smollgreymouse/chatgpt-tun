@@ -40,14 +40,14 @@ jobs:
         run: sudo bash scripts/setup-ngrok-apt.sh
       - name: Smoke test Debian installation with dependencies
         run: |
-          sudo apt-get install -y "./dist/chatgpt-tun_${VERSION}_amd64.deb"
+          sudo apt-get install -y "./dist/ctun_${VERSION}_amd64.deb"
           ctun --help
-          chatgpt-tun --help
-          sudo apt-get remove -y chatgpt-tun
+          ctun --help
+          sudo apt-get remove -y ctun
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: chatgpt-tun-${{ env.VERSION }}-linux-amd64
+          name: ctun-${{ env.VERSION }}-linux-amd64
           path: dist/*
           if-no-files-found: error
       - name: Publish GitHub Release
@@ -56,6 +56,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" dist/* \
-            --title "chatgpt-tun ${VERSION}" \
+            --title "ctun ${VERSION}" \
             --generate-notes \
             --verify-tag

@@ -240,7 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="One stable ngrok-backed MCP connector for many local projects.",
     )
     try:
-        package_version = version("chatgpt-tun")
+        package_version = version("ctun")
     except PackageNotFoundError:
         package_version = "development"
     parser.add_argument("--version", action="version", version=f"%(prog)s {package_version}")
