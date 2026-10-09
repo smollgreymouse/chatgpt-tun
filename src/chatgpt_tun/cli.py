@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from importlib.metadata import PackageNotFoundError, version
 import os
 import sys
 import time
@@ -237,6 +238,11 @@ def build_parser() -> argparse.ArgumentParser:
         prog="ctun",
         description="One stable ngrok-backed MCP connector for many local projects.",
     )
+    try:
+        package_version = version("chatgpt-tun")
+    except PackageNotFoundError:
+        package_version = "development"
+    parser.add_argument("--version", action="version", version=f"%(prog)s {package_version}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     setup = sub.add_parser("setup", help="Verify ngrok, start the detached gateway, and print the connector URL")
