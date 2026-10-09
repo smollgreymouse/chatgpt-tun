@@ -278,3 +278,129 @@ should be designed to be retry-safe when recovering from unexpected crashes.
 The legacy `run_command` is unchanged. Streamable HTTP still uses stateless
 JSON responses; asynchronous jobs avoid holding an HTTP call open and do not
 require SSE/notification support in ChatGPT.
+
+
+## Versioned Linux packages and releases
+
+Package version is the single `[project].version` value in `pyproject.toml`.
+Releases follow SemVer tags such as `v0.1.0`; the tag must match that value.
+The Release GitHub Actions workflow runs tests, builds three Linux x86-64
+artifacts, smoke-tests the Debian package and publishes them to GitHub Releases.
+A manual workflow dispatch builds artifacts without publishing a release.
+
+Release assets:
+- `chatgpt-tun_VERSION_amd64.deb` for Debian/Ubuntu
+- `chatgpt-tun-VERSION-1.x86_64.rpm` for RPM-based Linux
+- `chatgpt-tun_VERSION_linux_amd64.tar.gz` for manual installation
+- `SHA256SUMS` for integrity checks
+
+**Runtime requirement:** these initial Linux packages vendor Python dependencies
+built for **CPython 3.12** on Linux x86-64. Install `python3.12` on the target
+system; Python 3.11/3.13/3.14 cannot use the bundled native-extension wheels.
+The RPM and Debian package metadata declare this dependency. The tarball requires
+Python 3.12 and must be extracted at the filesystem root because its launchers
+refer to `/opt/chatgpt-tun/site`. This is not yet a universal Linux bundle.
+
+Install Debian/Ubuntu (one-time ngrok APT repository configuration first):
+
+```bash
+# From the checked-out CTUN repository:
+sudo bash scripts/setup-ngrok-apt.sh
+# The .deb then pulls ngrok and python3.12 through APT:
+sudo apt install ./chatgpt-tun_0.1.0_amd64.deb
+```
+
+The official ngrok APT repository is at
+`https://ngrok-agent.s3.amazonaws.com`, using the vendor-provided
+`ngrok.asc` key restricted to that repository via `signed-by`. The
+vendor currently documents the `bookworm` distribution for Linux
+APT installation. APT cannot discover third-party repositories merely
+from a `Depends: ngrok` field, so repository registration is an
+**explicit one-time operation**, not an implicit package post-install
+side effect. The CTUN package itself never sets an ngrok auth token,
+changes an existing ngrok config or launches the tunnel.
+
+The initial DEB uses `Depends: python3.12, ngrok`. No pip operation runs
+on the user's machine when installing it: Python libraries are vendored
+into `/opt/chatgpt-tun/site`.
+
+Install on an RPM-based Linux with Python 3.12 and ngrok already available:
+
+The RPM declares `Requires: python3.12` and `Recommends: ngrok`,
+because a generally available official ngrok RPM repository has **not**
+been verified. First install the ngrok standalone executable from
+[the official download page](https://ngrok.com/download/linux), then
+verify `ngrok version`. An RPM-installed ngrok package, when present,
+may satisfy the recommendation; placing a manually downloaded binary
+in PATH does **not** fulfill an RPM hard dependency.
+
+
+
+```bash
+sudo dnf install ./chatgpt-tun-0.1.0-1.x86_64.rpm
+```
+
+Install the tarball manually (does not register with a package manager):
+
+```bash
+sudo tar -C / -xzf chatgpt-tun_0.1.0_linux_amd64.tar.gz
+```
+
+Check `ctun --version`, `ngrok version`, and `ctun --help` after installation. `ngrok` is still a separately
+installed prerequisite. Existing connector URLs, active projects and gateway
+configuration remain under `~/.local/state/chatgpt-tun/` and are not deleted
+during package upgrades. Prefer `ctun shutdown` before replacing a running
+CTUN installation and `ctun up` afterward; binaries are not hot-reloaded.
+
+To publish a new version:
+1. Bump `pyproject.toml` version and update notes as needed.
+2. Merge and check CI on `main`.
+3. Push the matching annotated Git tag `vX.Y.Z` from that commit.
+4. Confirm the `Release packages` workflow passed and assets appeared under Releases.
+
+Local Linux builds need Python 3.12, `pip`, `dpkg-deb` and `rpmbuild`:
+`bash scripts/build-packages.sh`.
+
+## pipx remains supported on every OS
+
+Installing directly from this GitHub repository is a supported alternative to the
+binary release artifacts, and remains the simplest choice for developers:
+
+```bash
+pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git'
+pipx upgrade chatgpt-tun
+```
+
+Pin an exact, reproducible release with
+`pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git@v0.1.0'`
+(after the tag has been published). The existing SSH-based pipx instructions
+above also continue to work.
+
+## macOS and Windows distributions (separate platform pipeline)
+
+The macOS/Windows workflow is isolated from the Linux packaging workflow.
+It executes the test suite on each target OS and builds:
+- macOS (Apple Silicon) `.pkg` placing CTUN into `/opt/chatgpt-tun`
+  and launchers into `/usr/local/bin`. Python 3.12 and ngrok are external prerequisites.
+- Windows x64 portable `.zip` with `ctun.cmd`, bundled dependencies,
+  and `install.ps1` for copying files under the current user's
+  `%LOCALAPPDATA%\\Programs\\chatgpt-tun`. Python 3.12 and ngrok
+  are external prerequisites. This is **not yet an MSI**; add the extracted
+  directory to PATH after installing.
+
+The code uses `chatgpt_tun.platforms.linux`,
+`chatgpt_tun.platforms.macos`, and `chatgpt_tun.platforms.windows`
+for native process lifecycle operations. Shared MCP tools, jobs,
+configuration and project registry do not depend on a particular OS.
+Windows-specific integration needs validation in its own CI job before
+considering it production-supported. The Linux workflow remains independent.
+
+All packages preserve user state. The CTUN daemon should be shut down before
+upgrading; installing a new package never automatically restarts a running
+gateway.
+
+For `pipx`, dependency installation is deliberately different:
+`pipx` resolves CTUN's Python dependencies in its own isolated
+environment, but does **not** install the external ngrok executable.
+Install ngrok separately using its official instructions. Never place
+authtokens in system package scripts.

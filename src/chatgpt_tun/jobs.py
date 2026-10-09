@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .platforms import stop_pid
 from .state import state_dir
 from .workspace import safe_path
 
@@ -157,22 +158,16 @@ class JobManager:
         if proc.poll() is not None:
             return
         try:
-            if os.name == "nt":
-                proc.terminate()
-            else:
-                os.killpg(proc.pid, signal.SIGTERM)
+            stop_pid(proc.pid)
         except ProcessLookupError:
             return
         try:
             proc.wait(timeout=2)
         except subprocess.TimeoutExpired:
-            if os.name == "nt":
-                proc.kill()
-            else:
-                try:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
+            try:
+                stop_pid(proc.pid, force=True)
+            except ProcessLookupError:
+                pass
 
     def cancel(self, project: str, job_id: str) -> dict[str, Any]:
         with self.lock:

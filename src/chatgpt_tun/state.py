@@ -8,6 +8,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
+from .platforms import advisory_lock
+
 APP_NAME = "chatgpt-tun"
 
 
@@ -59,27 +61,8 @@ def _file_lock(path: Path) -> Iterator[None]:
     lock_path = path.with_suffix(path.suffix + ".lock")
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a+b") as fh:
-        if os.name == "nt":
-            import msvcrt
-
-            fh.seek(0)
-            if fh.tell() == 0:
-                fh.write(b"0")
-                fh.flush()
-            msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
-            try:
-                yield
-            finally:
-                fh.seek(0)
-                msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
-        else:
-            import fcntl
-
-            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-            try:
-                yield
-            finally:
-                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        with advisory_lock(fh):
+            yield
 
 
 @contextlib.contextmanager

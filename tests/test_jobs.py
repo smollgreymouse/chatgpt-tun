@@ -40,7 +40,7 @@ def test_returns_immediately_and_fetches_incremental_output(setup):
     assert final["status"] == "completed"
     first = setup.output("demo", job["id"], max_bytes=6)
     second = setup.output("demo", job["id"], offset=first["next_offset"])
-    assert first["text"] + second["text"] == "hello\nworld\n"
+    assert (first["text"] + second["text"]).replace("\r\n", "\n") == "hello\nworld\n"
     assert second["next_offset"] > first["next_offset"]
 
 
