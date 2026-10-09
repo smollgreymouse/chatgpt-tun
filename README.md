@@ -47,7 +47,7 @@ repositories; if not, add a trusted Python 3.12 source or use pipx.
 
 ```bash
 git clone https://github.com/smollgreymouse/ctun.git
-cd chatgpt-tun
+cd ctun
 # Adds official signed ngrok APT source. Once per machine:
 sudo bash scripts/setup-ngrok-apt.sh
 # Download the appropriate .deb from GitHub Releases, then:
