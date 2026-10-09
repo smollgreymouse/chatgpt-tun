@@ -37,7 +37,7 @@ There is no tunnel per project. `ctun up` only changes the global project regist
 
 Choose **one installation method**. Python libraries are included in binary packages;
 ngrok requires a separate account and one-time authorization.
-[Latest releases](https://github.com/smollgreymouse/chatgpt-tun/releases).
+[Latest releases](https://github.com/smollgreymouse/ctun/releases).
 
 ### Ubuntu / Debian — APT + DEB
 
@@ -46,7 +46,7 @@ through APT. Ensure Python 3.12 is available in your distro's configured
 repositories; if not, add a trusted Python 3.12 source or use pipx.
 
 ```bash
-git clone https://github.com/smollgreymouse/chatgpt-tun.git
+git clone https://github.com/smollgreymouse/ctun.git
 cd chatgpt-tun
 # Adds official signed ngrok APT source. Once per machine:
 sudo bash scripts/setup-ngrok-apt.sh
@@ -93,8 +93,8 @@ ctun --version
 Homebrew cask installs Python 3.12, ngrok and the CTUN PKG through a custom tap:
 
 ```sh
-brew tap smollgreymouse/chatgpt-tun https://github.com/smollgreymouse/chatgpt-tun
-brew install --cask smollgreymouse/chatgpt-tun/chatgpt-tun
+brew tap smollgreymouse/ctun https://github.com/smollgreymouse/ctun
+brew install --cask smollgreymouse/ctun/chatgpt-tun
 ngrok config add-authtoken 'YOUR_NGROK_TOKEN'
 ctun doctor
 ctun setup
@@ -130,9 +130,9 @@ Install Python 3.11+ and pipx through your platform package manager first,
 and install ngrok independently.
 
 ```bash
-pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git@v0.2.0'
+pipx install 'git+https://github.com/smollgreymouse/ctun.git@v0.2.0'
 # Alternatively track main:
-# pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git'
+# pipx install 'git+https://github.com/smollgreymouse/ctun.git'
 ctun --version
 ctun doctor
 ```
@@ -145,7 +145,7 @@ An SSH-based URL also works when GitHub SSH access is configured.
 ```bash
 ctun shutdown         # stop the existing daemon before replacing code
 # Native packages: reinstall a newer package from Releases;
-# Homebrew: brew upgrade --cask smollgreymouse/chatgpt-tun/chatgpt-tun
+# Homebrew: brew upgrade --cask smollgreymouse/ctun/chatgpt-tun
 # pipx: pipx upgrade chatgpt-tun
 ctun --version
 ctun doctor

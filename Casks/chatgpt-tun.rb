@@ -2,10 +2,10 @@ cask "chatgpt-tun" do
   version "0.2.0"
   sha256 :no_check
 
-  url "https://github.com/smollgreymouse/chatgpt-tun/releases/download/v#{version}/chatgpt-tun_#{version}_macos_arm64.pkg"
+  url "https://github.com/smollgreymouse/ctun/releases/download/v#{version}/chatgpt-tun_#{version}_macos_arm64.pkg"
   name "CTUN"
   desc "Detached multi-project MCP gateway for ChatGPT"
-  homepage "https://github.com/smollgreymouse/chatgpt-tun"
+  homepage "https://github.com/smollgreymouse/ctun"
 
   depends_on arch: :arm64
   depends_on formula: "python@3.12"
