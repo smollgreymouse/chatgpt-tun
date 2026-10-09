@@ -278,3 +278,58 @@ should be designed to be retry-safe when recovering from unexpected crashes.
 The legacy `run_command` is unchanged. Streamable HTTP still uses stateless
 JSON responses; asynchronous jobs avoid holding an HTTP call open and do not
 require SSE/notification support in ChatGPT.
+
+
+## Versioned Linux packages and releases
+
+Package version is the single `[project].version` value in `pyproject.toml`.
+Releases follow SemVer tags such as `v0.1.0`; the tag must match that value.
+The Release GitHub Actions workflow runs tests, builds three Linux x86-64
+artifacts, smoke-tests the Debian package and publishes them to GitHub Releases.
+A manual workflow dispatch builds artifacts without publishing a release.
+
+Release assets:
+- `chatgpt-tun_VERSION_amd64.deb` for Debian/Ubuntu
+- `chatgpt-tun-VERSION-1.x86_64.rpm` for RPM-based Linux
+- `chatgpt-tun_VERSION_linux_amd64.tar.gz` for manual installation
+- `SHA256SUMS` for integrity checks
+
+**Runtime requirement:** these initial Linux packages vendor Python dependencies
+built for **CPython 3.12** on Linux x86-64. Install `python3.12` on the target
+system; Python 3.11/3.13/3.14 cannot use the bundled native-extension wheels.
+The RPM and Debian package metadata declare this dependency. The tarball requires
+Python 3.12 and must be extracted at the filesystem root because its launchers
+refer to `/opt/chatgpt-tun/site`. This is not yet a universal Linux bundle.
+
+Install Debian/Ubuntu:
+
+```bash
+sudo apt install ./chatgpt-tun_0.1.0_amd64.deb
+```
+
+Install on an RPM-based Linux with Python 3.12 available:
+
+```bash
+sudo dnf install ./chatgpt-tun-0.1.0-1.x86_64.rpm
+```
+
+Install the tarball manually (does not register with a package manager):
+
+```bash
+sudo tar -C / -xzf chatgpt-tun_0.1.0_linux_amd64.tar.gz
+```
+
+Check `ctun --help` after installation. `ngrok` is still a separately
+installed prerequisite. Existing connector URLs, active projects and gateway
+configuration remain under `~/.local/state/chatgpt-tun/` and are not deleted
+during package upgrades. Prefer `ctun shutdown` before replacing a running
+CTUN installation and `ctun up` afterward; binaries are not hot-reloaded.
+
+To publish a new version:
+1. Bump `pyproject.toml` version and update notes as needed.
+2. Merge and check CI on `main`.
+3. Push the matching annotated Git tag `vX.Y.Z` from that commit.
+4. Confirm the `Release packages` workflow passed and assets appeared under Releases.
+
+Local Linux builds need Python 3.12, `pip`, `dpkg-deb` and `rpmbuild`:
+`bash scripts/build-packages.sh`.
