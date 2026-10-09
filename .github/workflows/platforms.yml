@@ -59,7 +59,7 @@ jobs:
           $sourceDir = (Resolve-Path "build/windows-dist/ctun").Path
           & "C:/Program Files (x86)/Inno Setup 6/ISCC.exe" "/DAppVersion=$version" "/DSourceDir=$sourceDir" packaging/windows/ctun.iss
           Copy-Item -Force packaging/dist/*.exe dist/
-          if (-not (Test-Path "dist/chatgpt-tun_${version}_windows_amd64.exe")) { throw "Windows installer missing from dist" }
+          if (-not (Test-Path "dist/ctun_${version}_windows_amd64.exe")) { throw "Windows installer missing from dist" }
       - name: Validate tag version
         if: github.ref_type == 'tag'
         shell: bash
