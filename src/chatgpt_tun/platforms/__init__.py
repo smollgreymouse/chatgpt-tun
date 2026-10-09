@@ -7,5 +7,9 @@ import sys
 if os.name == "nt":
     from .windows import pid_alive, spawn_flags, stop_pid
 else:
-    from .posix import pid_alive, spawn_flags, stop_pid
+    from .windows import pid_alive, spawn_flags, stop_pid
+elif sys.platform == "darwin":
+    from .macos import pid_alive, spawn_flags, stop_pid
+else:
+    from .linux import pid_alive, spawn_flags, stop_pid
 PLATFORM = "windows" if os.name == "nt" else ("macos" if sys.platform == "darwin" else "linux")
