@@ -22,15 +22,5 @@ UninstallDisplayName=CTUN {#AppVersion}
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
 Name: "{group}\CTUN Doctor"; Filename: "{app}\ctun.exe"; Parameters: "doctor"
-[Registry]
-Root: HKAU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{code:UpdatedPath}"; Flags: preservestringtype
-[Code]
-function UpdatedPath(Param: String): String;
-var P: String;
-begin
-  P := GetEnv('PATH');
-  if Pos(Lowercase(ExpandConstant('{app}')), Lowercase(P)) = 0 then
-    Result := P + ';' + ExpandConstant('{app}')
-  else
-    Result := P;
-end;
+[Run]
+Filename: "{app}\\ctun.exe"; Parameters: "doctor"; Description: "Check CTUN dependencies"; Flags: postinstall nowait skipifsilent
