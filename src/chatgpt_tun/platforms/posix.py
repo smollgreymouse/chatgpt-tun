@@ -19,3 +19,14 @@ def spawn_flags() -> dict:
 
 def stop_pid(pid: int, force: bool = False) -> None:
     os.killpg(pid, signal.SIGKILL if force else signal.SIGTERM)
+
+from contextlib import contextmanager
+import fcntl
+
+@contextmanager
+def advisory_lock(fh):
+    fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+    try:
+        yield
+    finally:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
