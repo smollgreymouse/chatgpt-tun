@@ -404,3 +404,54 @@ For `pipx`, dependency installation is deliberately different:
 environment, but does **not** install the external ngrok executable.
 Install ngrok separately using its official instructions. Never place
 authtokens in system package scripts.
+
+## v0.2.0 native installers and dependencies
+
+All installation paths remain available, including
+`pipx install 'git+https://github.com/smollgreymouse/chatgpt-tun.git'`
+and tagged `pipx` installs. Linux DEB/RPM/tar packaging is unchanged except
+for the shared application version.
+
+### macOS Apple Silicon, Homebrew
+
+This repository contains a Homebrew cask under `Casks/chatgpt-tun.rb`. Tap
+this repository as a custom tap before installing:
+
+```sh
+brew tap smollgreymouse/chatgpt-tun https://github.com/smollgreymouse/chatgpt-tun
+brew install --cask smollgreymouse/chatgpt-tun/chatgpt-tun
+ctun doctor
+```
+
+The cask declares dependencies on Homebrew `python@3.12` and the official
+`ngrok` cask. The `.pkg` remains available for manual installation.
+Do not replace or delete the existing ngrok authentication; run
+`ngrok config add-authtoken ...` only on fresh machines.
+
+### Windows x64, native installer
+
+The release adds `chatgpt-tun_VERSION_windows_amd64.exe`, generated
+by Inno Setup from a PyInstaller bundle. This includes its own CPython
+runtime and Python package dependencies (no standalone Python needed).
+It installs for the current user without administrator permissions
+and does not run CTUN as a service or change ngrok credentials.
+Install ngrok separately with `winget install Ngrok.Ngrok`, authenticate
+once and run CTUN doctor from the Start Menu. Add the application's
+installation directory to PATH if you want bare `ctun` at a terminal;
+the installer does not silently rewrite the user's PATH.
+
+The existing Windows portable archive is retained as an alternative; it
+still needs Python 3.12. Windows, macOS and Linux have independent CI
+build jobs and dedicated process modules; no platform installer runs
+on another operating system.
+
+### Troubleshooting
+
+```sh
+ctun --version
+ctun doctor
+ctun doctor --json
+```
+
+Doctor reports missing dependencies and tunnel readiness without modifying
+ngrok credentials, registered projects, or starting/stopping the daemon.
