@@ -38,7 +38,7 @@ Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: smollgreymouse
-Depends: python3.12
+Depends: python3.12, ngrok
 Description: Detached multi-project MCP gateway over ngrok
 EOF
 dpkg-deb --build --root-owner-group "$DEBROOT" "$DIST/chatgpt-tun_${VERSION}_amd64.deb"
@@ -52,6 +52,7 @@ Summary: Detached multi-project MCP gateway over ngrok
 License: MIT
 BuildArch: x86_64
 Requires: python3.12
+Recommends: ngrok
 %global debug_package %{nil}
 %description
 Detached multi-project MCP gateway for ChatGPT.
