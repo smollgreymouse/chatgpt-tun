@@ -36,7 +36,9 @@ jobs:
           echo "VERSION=$version" >> "$GITHUB_ENV"
       - name: Build distribution packages
         run: bash scripts/build-packages.sh
-      - name: Smoke test Debian installation
+      - name: Configure official ngrok APT repository
+        run: sudo bash scripts/setup-ngrok-apt.sh
+      - name: Smoke test Debian installation with dependencies
         run: |
           sudo apt-get install -y "./dist/chatgpt-tun_${VERSION}_amd64.deb"
           ctun --help
