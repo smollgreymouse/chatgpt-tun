@@ -301,13 +301,40 @@ The RPM and Debian package metadata declare this dependency. The tarball require
 Python 3.12 and must be extracted at the filesystem root because its launchers
 refer to `/opt/chatgpt-tun/site`. This is not yet a universal Linux bundle.
 
-Install Debian/Ubuntu:
+Install Debian/Ubuntu (one-time ngrok APT repository configuration first):
 
 ```bash
+# From the checked-out CTUN repository:
+sudo bash scripts/setup-ngrok-apt.sh
+# The .deb then pulls ngrok and python3.12 through APT:
 sudo apt install ./chatgpt-tun_0.1.0_amd64.deb
 ```
 
-Install on an RPM-based Linux with Python 3.12 available:
+The official ngrok APT repository is at
+`https://ngrok-agent.s3.amazonaws.com`, using the vendor-provided
+`ngrok.asc` key restricted to that repository via `signed-by`. The
+vendor currently documents the `bookworm` distribution for Linux
+APT installation. APT cannot discover third-party repositories merely
+from a `Depends: ngrok` field, so repository registration is an
+**explicit one-time operation**, not an implicit package post-install
+side effect. The CTUN package itself never sets an ngrok auth token,
+changes an existing ngrok config or launches the tunnel.
+
+The initial DEB uses `Depends: python3.12, ngrok`. No pip operation runs
+on the user's machine when installing it: Python libraries are vendored
+into `/opt/chatgpt-tun/site`.
+
+Install on an RPM-based Linux with Python 3.12 and ngrok already available:
+
+The RPM declares `Requires: python3.12` and `Recommends: ngrok`,
+because a generally available official ngrok RPM repository has **not**
+been verified. First install the ngrok standalone executable from
+[the official download page](https://ngrok.com/download/linux), then
+verify `ngrok version`. An RPM-installed ngrok package, when present,
+may satisfy the recommendation; placing a manually downloaded binary
+in PATH does **not** fulfill an RPM hard dependency.
+
+
 
 ```bash
 sudo dnf install ./chatgpt-tun-0.1.0-1.x86_64.rpm
@@ -319,7 +346,7 @@ Install the tarball manually (does not register with a package manager):
 sudo tar -C / -xzf chatgpt-tun_0.1.0_linux_amd64.tar.gz
 ```
 
-Check `ctun --help` after installation. `ngrok` is still a separately
+Check `ctun --version`, `ngrok version`, and `ctun --help` after installation. `ngrok` is still a separately
 installed prerequisite. Existing connector URLs, active projects and gateway
 configuration remain under `~/.local/state/chatgpt-tun/` and are not deleted
 during package upgrades. Prefer `ctun shutdown` before replacing a running
@@ -371,3 +398,9 @@ considering it production-supported. The Linux workflow remains independent.
 All packages preserve user state. The CTUN daemon should be shut down before
 upgrading; installing a new package never automatically restarts a running
 gateway.
+
+For `pipx`, dependency installation is deliberately different:
+`pipx` resolves CTUN's Python dependencies in its own isolated
+environment, but does **not** install the external ngrok executable.
+Install ngrok separately using its official instructions. Never place
+authtokens in system package scripts.
