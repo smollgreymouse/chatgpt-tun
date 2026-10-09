@@ -8,6 +8,7 @@ import sys
 import time
 from pathlib import Path
 
+from .doctor import print_diagnostics
 from .ngrok import NgrokError, ngrok_version
 from .process import (
     daemon_running,
@@ -244,6 +245,10 @@ def build_parser() -> argparse.ArgumentParser:
         package_version = "development"
     parser.add_argument("--version", action="version", version=f"%(prog)s {package_version}")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    doctor = sub.add_parser("doctor", help="Inspect platform dependencies and tunnel state without modifying them")
+    doctor.add_argument("--json", action="store_true")
+    doctor.set_defaults(func=lambda args: print_diagnostics(args.json))
 
     setup = sub.add_parser("setup", help="Verify ngrok, start the detached gateway, and print the connector URL")
     setup.add_argument("--wait", type=float, default=25.0, help="seconds to wait for ngrok")
