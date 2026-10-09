@@ -15,7 +15,7 @@ ROOT="$PWD/build/root"
 DIST="$PWD/dist"
 rm -rf "$PWD/build" "$DIST"
 mkdir -p "$ROOT/opt/chatgpt-tun/site" "$ROOT/usr/bin" "$DIST"
-python3 -m pip install --no-compile --target "$ROOT/opt/chatgpt-tun/site" .
+python3.12 -m pip install --no-compile --target "$ROOT/opt/chatgpt-tun/site" .
 cat > "$ROOT/usr/bin/ctun" <<'EOF'
 #!/bin/sh
 set -eu
