@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "chatgpt-tun"
-version = "0.1.0"
+version = "0.2.0"
 description = "Detached multi-project MCP gateway exposed through one stable ngrok endpoint"
 readme = "README.md"
 requires-python = ">=3.11"

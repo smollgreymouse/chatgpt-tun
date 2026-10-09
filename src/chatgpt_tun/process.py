@@ -47,7 +47,7 @@ def _start_daemon_unlocked(wait_seconds: float) -> dict[str, Any]:
         }
         kwargs.update(spawn_flags())
         process = subprocess.Popen(
-            [sys.executable, "-m", "chatgpt_tun.daemon"],
+            ([sys.executable, "--internal-daemon"] if getattr(sys, "frozen", False) else [sys.executable, "-m", "chatgpt_tun.daemon"]),
             **kwargs,
         )
 
