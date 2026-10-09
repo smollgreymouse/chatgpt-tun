@@ -1,4 +1,8 @@
-# chatgpt-tun
+# CTUN — Summon Your Local Tools
+
+> *One tunnel to summon them all.*
+>
+> — Son of Cthulhu
 
 A detached, multi-project local MCP gateway for ChatGPT.
 
