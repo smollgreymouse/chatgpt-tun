@@ -1,17 +1,12 @@
-<table>
-  <tr>
-    <td width="180" align="center" valign="middle">
-      <img src="ctun.png" alt="CTUN — Son of Cthulhu mascot" width="160">
-    </td>
-    <td valign="middle">
-      <h1>CTUN — Summon Your Local Tools</h1>
-      <blockquote>
-        <em>One tunnel to summon them all.</em><br>
-        — Son of Cthulhu
-      </blockquote>
-    </td>
-  </tr>
-</table>
+<img src="ctun.png" alt="CTUN — Son of Cthulhu mascot" width="160" align="left">
+
+# CTUN — Summon Your Local Tools
+
+> *One tunnel to summon them all.*
+>
+> — Son of Cthulhu
+
+<br clear="all">
 
 A detached, multi-project local MCP gateway for ChatGPT.
 
